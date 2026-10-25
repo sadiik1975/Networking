@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine, migrate_schema
+from app.mcp_auth import McpAuthMiddleware
 from app.mcp_server import mcp
 from app.config import validate_settings
 from app.routers import businesses, dispatch, health, leads, matchmaking
@@ -47,7 +48,7 @@ app.include_router(matchmaking.router)
 
 
 # SSE transport for hosted MCP clients: GET /mcp/sse, POST /mcp/messages/
-app.mount("/mcp", mcp.sse_app())
+app.mount("/mcp", McpAuthMiddleware(mcp.sse_app()))
 
 
 @app.get("/", include_in_schema=False)

@@ -104,6 +104,12 @@ command, e.g. for Claude Desktop / VS Code `mcp.json`:
 Once connected, you can ask things like "find electrical leads within 50
 miles of 10001" and the host will call `search_leads` for you.
 
+## Hosted MCP endpoint
+
+The deployed app serves MCP over SSE at `/mcp/sse`. It requires `MCP_API_KEY`
+(sent as `Authorization: Bearer <key>` or `X-API-Key: <key>`); without the
+variable the endpoint returns 503. Render generates the key on first deploy.
+
 ## Render Deployment
 
 This repository includes a Render Blueprint (`render.yaml`). To deploy it:

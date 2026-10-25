@@ -2,7 +2,25 @@ services:
   - type: web
     name: been-ventures
     runtime: python
-    plan: free
+    # Starter never sleeps and supports a persistent disk (free does neither).
+    plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////var/data/leads.db
+      - key: DISPATCH_API_KEY
+        generateValue: true
+      - key: MCP_API_KEY
+        generateValue: true
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

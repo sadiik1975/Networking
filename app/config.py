@@ -15,6 +15,9 @@ class Settings:
     max_search_results: int = int(os.getenv("MAX_SEARCH_RESULTS", "50"))
     dispatch_api_key: str = os.getenv("DISPATCH_API_KEY", "dev-dispatch-key")
 
+    # Shared secret required to call the hosted MCP endpoint (/mcp).
+    mcp_api_key: str | None = os.getenv("MCP_API_KEY") or None
+
     # Public Overpass endpoints need no API key; this is an endpoint, not a secret.
     overpass_api_url: str = os.getenv("OVERPASS_API_URL", "https://overpass-api.de/api/interpreter")
     overpass_timeout_seconds: float = float(os.getenv("OVERPASS_TIMEOUT_SECONDS", "60"))
