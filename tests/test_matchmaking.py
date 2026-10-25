@@ -31,7 +31,7 @@ def client() -> Iterator[TestClient]:
     app.dependency_overrides[get_db] = override_get_db
     try:
         client = TestClient(app)
-        client.headers.update({"X-API-Key": settings.dispatch_api_key})
+        client.headers.update({"X-API-Key": settings.api_key})
         yield client
     finally:
         app.dependency_overrides.pop(get_db, None)

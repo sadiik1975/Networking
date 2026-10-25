@@ -1,11 +1,11 @@
 # networking_events.json
 
-Curated, manually verified events used by the `search_multistate_networking_events` MCP tool.
+Optional seed list. When the events table is empty at startup, entries here are
+imported once as status `discovered`. After that, events live in the database.
 Only add events confirmed on the organizer's site. Example entry:
 
 ```json
 {
-  "event_id": "evt_example",
   "title": "Event title",
   "date": "2026-11-18",
   "time": "9:00 AM ET",
@@ -13,7 +13,7 @@ Only add events confirmed on the organizer's site. Example entry:
   "location": "City, ST",
   "format": "in_person",
   "organizer": "Host organization",
-  "target_groups": ["MWBE", "Supplier_Diversity"],
+  "target_groups": ["B2B_Networking", "Small_Business"],
   "registration_url": "https://..."
 }
 ```

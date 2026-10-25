@@ -5,27 +5,15 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 from app.config import settings
-from app.database import Base, SessionLocal, engine, migrate_schema
+from app.database import init_db
 from app.mcp_auth import McpAuthMiddleware
 from app.mcp_server import mcp
-from app.config import validate_settings
-from app.routers import businesses, dispatch, health, leads, matchmaking
-from app.seed import seed_dispatch_if_empty, seed_if_empty
+from app.routers import events, matchmaking
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    problems = validate_settings()
-    if problems:
-        raise RuntimeError("Invalid configuration: " + "; ".join(problems))
-    Base.metadata.create_all(bind=engine)
-    migrate_schema()
-    db = SessionLocal()
-    try:
-        seed_if_empty(db)
-        seed_dispatch_if_empty(db)
-    finally:
-        db.close()
+    init_db()
     yield
 
 
@@ -33,19 +21,15 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description=(
-        "Aggregates and serves verified local project leads (municipal permits, "
-        "commercial renovations, fit-outs) to AI agents via a narrow, idempotent API."
+        "Find, track and follow up on B2B networking events for Borough Build and "
+        "Been Ventures. Also available to AI agents over MCP at /mcp/sse."
     ),
     openapi_version="3.1.0",
     lifespan=lifespan,
 )
 
-app.include_router(health.router)
-app.include_router(leads.router)
-app.include_router(dispatch.router)
-app.include_router(businesses.router)
+app.include_router(events.router)
 app.include_router(matchmaking.router)
-
 
 # SSE transport for hosted MCP clients: GET /mcp/sse, POST /mcp/messages/
 app.mount("/mcp", McpAuthMiddleware(mcp.sse_app()))

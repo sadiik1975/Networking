@@ -2,64 +2,6 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, model_validator
 
-from app.models_db import LeadStatus, ProjectScale, Trade
-
-
-class LeadSummary(BaseModel):
-    """Sanitized lead object returned by the search endpoint."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    trade: Trade
-    project_type: str
-    description: str
-    city: str
-    state: str
-    zip_code: str
-    distance_miles: float = Field(..., ge=0, description="Distance from the queried location, in miles")
-    estimated_value: float | None = None
-    issue_date: date
-    project_scale: ProjectScale
-    municipal_source_url: HttpUrl
-    ownership_category: str
-    certification_details: str
-    source_url: str
-
-
-class LeadDetail(BaseModel):
-    """Deep-dive lead specification for dispatch."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    trade: Trade
-    project_type: str
-    description: str
-
-    address_line1: str
-    city: str
-    state: str
-    zip_code: str
-    latitude: float
-    longitude: float
-
-    issue_date: date
-    estimated_value: float | None = None
-    project_scale: ProjectScale
-    permit_number: str
-    status: LeadStatus
-    verified: bool
-
-    ownership_category: str
-    certification_details: str
-    source_url: str
-
-    municipal_source_url: HttpUrl
-    municipal_contact_name: str
-    municipal_contact_phone: str
-    municipal_contact_email: EmailStr
-
 
 class HealthResponse(BaseModel):
     status: str
@@ -67,8 +9,69 @@ class HealthResponse(BaseModel):
     version: str
 
 
-class ErrorResponse(BaseModel):
-    detail: str
+class EventCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=300)
+    event_date: date
+    state: str = Field(min_length=2, max_length=2)
+    event_format: str
+    organizer: str = Field(min_length=1, max_length=300)
+    registration_url: HttpUrl
+    target_groups: list[str] = Field(default_factory=list, max_length=20)
+    location: str = Field(default="", max_length=300)
+    time: str = Field(default="", max_length=60)
+    status: str = "interested"
+    brand: str | None = None
+    notes: str = Field(default="", max_length=5000)
+
+
+class EventUpdate(BaseModel):
+    status: str | None = None
+    brand: str | None = None
+    notes: str | None = Field(default=None, max_length=5000)
+
+
+class ContactCreate(BaseModel):
+    capture_type: str = "manual"
+    raw_text: str = Field(default="", max_length=10000)
+    event_context: str = Field(default="", max_length=300)
+    event_id: str | None = None
+    name: str | None = Field(default=None, max_length=200)
+    company: str | None = Field(default=None, max_length=200)
+    email: str | None = Field(default=None, max_length=200)
+    phone: str | None = Field(default=None, max_length=60)
+    notes: str = Field(default="", max_length=5000)
+    brand: str | None = None
+
+
+class ContactUpdate(BaseModel):
+    name: str | None = Field(default=None, max_length=200)
+    company: str | None = Field(default=None, max_length=200)
+    email: str | None = Field(default=None, max_length=200)
+    phone: str | None = Field(default=None, max_length=60)
+    notes: str | None = Field(default=None, max_length=5000)
+    brand: str | None = None
+    followup_status: str | None = None
+
+
+class FollowupRequest(BaseModel):
+    brand: str
+    offering_focus: str
+    highlights: list[str] = Field(default_factory=list, max_length=10)
+
+
+class CompatibilityRequest(BaseModel):
+    brand: str
+    prospect_name: str = Field(min_length=1, max_length=200)
+    industry: str = Field(default="", max_length=200)
+    prospect_type: str = "potential_client"
+    certified_wmbe_or_mbe: bool = False
+    community_affiliated: bool = False
+    perceived_needs: list[str] = Field(default_factory=list, max_length=20)
+
+
+class ReminderRequest(BaseModel):
+    days_ahead: int = Field(default=7, ge=1, le=60)
+    confirmed: bool = False
 
 
 class CompanyLocation(BaseModel):

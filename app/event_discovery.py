@@ -1,9 +1,8 @@
 """Event candidate discovery via Tavily web search.
 
-Results are unverified web hits. Nothing is written to the curated events file
-until `confirm_event` is called explicitly with details the user has checked.
+Results are unverified web hits. Nothing is saved until add_event is called
+explicitly with details the user has checked.
 """
-import json
 import re
 from datetime import date
 
@@ -17,13 +16,17 @@ STATE_NAMES = {
     "PA": "Pennsylvania", "DE": "Delaware", "DC": "Washington DC",
 }
 GROUP_TERMS = {
+    "B2B_Networking": "B2B business networking mixer",
+    "Small_Business": "small business owners networking expo",
+    "Startup_Tech": "startup founders technology AI networking meetup",
+    "Chamber_of_Commerce": "chamber of commerce business after hours networking",
     "WMBE": "WMBE women minority business enterprise",
     "MWBE": "MWBE minority women-owned business expo procurement",
     "Muslim_Business": "Muslim business owners networking halal expo",
     "Supplier_Diversity": "supplier diversity minority supplier development council",
     "Tech_Contracting": "tech contractors small business technology networking",
 }
-EVENT_WORDS = re.compile(r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop", re.I)
+EVENT_WORDS = re.compile(r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop|meetup", re.I)
 
 
 class DiscoveryError(Exception):
@@ -52,15 +55,16 @@ def _search(query: str, max_results: int) -> list[dict]:
 
 
 def discover_candidates(
-    states: list[str],
-    target_groups: list[str],
+    states: list[str] | None = None,
+    target_groups: list[str] | None = None,
     event_format: str = "all",
     max_results: int = 10,
 ) -> dict:
-    states_up = [s.upper() for s in states]
-    if not states_up or not set(states_up) <= set(networking.DEFAULT_STATES):
+    states_up = [s.upper() for s in (states or networking.DEFAULT_STATES)]
+    groups = target_groups or ["B2B_Networking"]
+    if not set(states_up) <= set(networking.DEFAULT_STATES):
         return {"error": f"states must be within {networking.DEFAULT_STATES}"}
-    if not target_groups or not set(target_groups) <= networking.TARGET_GROUPS:
+    if not set(groups) <= networking.TARGET_GROUPS:
         return {"error": f"target_groups must be within {sorted(networking.TARGET_GROUPS)}"}
     if event_format not in networking.EVENT_FORMATS:
         return {"error": f"event_format must be one of {sorted(networking.EVENT_FORMATS)}"}
@@ -72,7 +76,7 @@ def discover_candidates(
     seen: set[str] = set()
     candidates: list[dict] = []
     try:
-        for group in target_groups:
+        for group in groups:
             query = f"upcoming {GROUP_TERMS[group]} event {fmt} ({places}) {year} {year + 1}"
             for hit in _search(query, max_results):
                 url = hit.get("url", "")
@@ -96,54 +100,6 @@ def discover_candidates(
     return {
         "source": "tavily_web_search",
         "count": len(candidates),
-        "candidates": candidates[: max_results * len(target_groups)],
-        "note": "Unverified. Open each URL, confirm date/location, then call confirm_networking_event.",
+        "candidates": candidates[: max_results * len(groups)],
+        "note": "Unverified. Open each URL, confirm date/location, then save with confirm_networking_event.",
     }
-
-
-def confirm_event(
-    title: str,
-    event_date: str,
-    state: str,
-    event_format: str,
-    organizer: str,
-    target_groups: list[str],
-    registration_url: str,
-    location: str = "",
-    time: str = "",
-) -> dict:
-    try:
-        parsed = date.fromisoformat(event_date)
-    except ValueError:
-        return {"error": "event_date must be YYYY-MM-DD"}
-    if state.upper() not in networking.DEFAULT_STATES:
-        return {"error": f"state must be within {networking.DEFAULT_STATES}"}
-    if event_format not in networking.EVENT_FORMATS - {"all"}:
-        return {"error": "event_format must be in_person, virtual, or hybrid"}
-    if not target_groups or not set(target_groups) <= networking.TARGET_GROUPS:
-        return {"error": f"target_groups must be within {sorted(networking.TARGET_GROUPS)}"}
-    if not registration_url.startswith(("http://", "https://")):
-        return {"error": "registration_url must be an http(s) URL"}
-    if not title.strip() or not organizer.strip():
-        return {"error": "title and organizer are required"}
-
-    events = networking._load_events()
-    if any(e.get("registration_url") == registration_url and e.get("date") == event_date for e in events):
-        return {"error": "Event already exists in the curated file"}
-
-    slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:40]
-    event = {
-        "event_id": f"evt_{parsed.isoformat()}_{slug}",
-        "title": title.strip(),
-        "date": event_date,
-        "time": time,
-        "state": state.upper(),
-        "location": location,
-        "format": event_format,
-        "organizer": organizer.strip(),
-        "target_groups": target_groups,
-        "registration_url": registration_url,
-    }
-    events.append(event)
-    networking.EVENTS_FILE.write_text(json.dumps(events, indent=2) + "\n", encoding="utf-8")
-    return {"saved": event}

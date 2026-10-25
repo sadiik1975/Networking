@@ -1,139 +1,90 @@
-# Contractor Discovery & Matching Connector
+# Networking Events Hub
 
-FastAPI backend that aggregates verified local project leads (municipal
-permits, commercial renovations, fit-outs) and serves them via a narrow,
-idempotent OpenAPI 3.1 surface for AI agent consumption (Muse-compatible).
+A connector for finding, tracking and following up on B2B networking events for
+**Borough Build** and **Been Ventures**. It serves a REST API and an MCP endpoint
+so an AI agent host (Muse, Claude Desktop, VS Code) can use the same tools.
+
+## What it does
+
+- **Discover events** across NY, NJ, CT, MA, PA, DE and DC with Tavily web search.
+  Results are unverified candidates; nothing is saved until you confirm one.
+- **Track events** you plan to attend: `discovered`, `interested`, `registered`,
+  `attended`, `skipped`, optionally tagged with the company attending.
+- **Capture contacts** from business cards, voice notes and conversation summaries.
+- **Draft follow-ups** per company. Drafts are never sent.
+- **Score prospects** against Borough Build or Been Ventures (heuristic, 0-10).
+- **Telegram reminders** for upcoming events, sent only when you confirm.
+- **Company profiles and matching** (`/companies`, `/match`) for B2B partner lookup.
 
 ## Run locally
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env   # then edit
 uvicorn app.main:app --reload
 ```
 
-- Interactive docs: `http://127.0.0.1:8000/docs`
-- Machine-readable schema: `http://127.0.0.1:8000/openapi.json`
-- Landing page: `http://127.0.0.1:8000/`
+Docs: `http://127.0.0.1:8000/docs`. Run the tests with `pytest tests`.
 
-On first startup, a SQLite database (`leads.db`) is created and seeded with
-sample verified leads across several metro areas.
+## REST API
 
-## Endpoints
+All routes except `/health` and `/` need `X-API-Key` (`API_KEY`).
 
-- `GET /health` — service status and database connectivity.
-- `GET /leads/search?trade=&location=&radius_miles=&min_value=` — search leads
-  by trade and geographic radius around a ZIP code or "City, ST".
-- `GET /leads/{lead_id}` — deep-dive lead details for dispatch.
-- `POST /companies` — persist a company profile for matchmaking; `GET /companies`
-  and `GET /companies/{company_id}` list and retrieve profiles. `PATCH` and
-  `DELETE /companies/{company_id}` update and remove profiles.
-- `POST /match?query=...` — rank saved profiles by lightweight text cosine
-  similarity. Matching is lexical, not an embedding-based semantic model; scores
-  are ranking signals, not calibrated probabilities. These profile and match
-  routes require `X-API-Key` (`DISPATCH_API_KEY`). The default minimum score is
-  `0.3`. Add `&notify=true` to explicitly send Telegram alerts for returned
-  matches after setting `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+- `GET /events`, `GET /events/discover`, `POST /events`, `PATCH /events/{id}`
+- `POST /contacts`, `GET /contacts`, `PATCH /contacts/{id}`, `POST /contacts/{id}/followup`
+- `POST /compatibility`, `POST /reminders/telegram`
+- `POST/GET/PATCH/DELETE /companies`, `POST /match`
 
-Company profiles currently share one database namespace; this implementation
-does not provide tenant isolation or tenant authentication.
+Brand keys are `borough_build` and `been_ventures`. Edit their descriptions and
+follow-up offerings in [app/brands.py](app/brands.py).
 
-## HVAC business search (OpenStreetMap)
+## MCP tools
 
-`GET /businesses/hvac/search?location=10001&radius_miles=15&limit=50` (and the
-`search_hvac_businesses` MCP tool) return real HVAC businesses mapped in
-OpenStreetMap via the public Overpass API. No API key is needed. Copy
-`.env.example` to `.env` to override `OVERPASS_API_URL` and related settings.
-Locations: built-in ZIP/city table, or any US location when `NOMINATIM_ENABLED=true`.
-Results are never substituted with sample data; coverage depends on OSM, and
-missing phone/website fields are `null`. Run tests with `pytest`.
+`search_networking_events`, `discover_networking_event_candidates`,
+`confirm_networking_event`, `update_networking_event`,
+`process_muse_handsfree_context`, `list_networking_contacts`,
+`update_networking_contact`, `match_credentials_compatibility`,
+`generate_tailored_pitch_deck_or_followup`, `send_event_reminders_to_telegram`,
+`send_report_to_telegram`.
 
-## Dispatch lifecycle API
-
-Mutating dispatch routes require `X-API-Key`. Set `DISPATCH_API_KEY` in the
-environment; the local development default is `dev-dispatch-key`.
-
-- `POST /contractors` — create a contractor profile.
-- `GET/PATCH/DELETE /contractors/{contractor_id}` — manage or deactivate a profile.
-- `POST /contractors/{contractor_id}/crews` — register an active crew.
-- `GET /contractors/search` — match contractors by trade, ZIP radius, and ownership.
-- `GET /leads/{lead_id}/matches` — match contractors to an existing lead.
-- `POST /outreach/contact` — queue an auditable outreach attempt after confirmation.
-- `POST /dispatch/schedule` — create a work order after dispatch and customer confirmation.
-- `POST /work-orders/{work_order_id}/status` — advance status through the strict lifecycle.
-
-Outreach is queued, not sent, until a provider integration is configured. Scheduling
-checks crew conflicts. The default lifecycle is `new -> contacted -> interested ->
-assigned -> scheduled -> in_progress -> completed`; cancellation is available from
-each active state.
-
-## Ask it questions conversationally (MCP)
-
-An MCP server (`app/mcp_server.py`) exposes `search_leads`, `get_lead`,
-`find_contractors`, and `queue_outreach` as
-tools so any MCP-compatible agent host (Muse, Claude Desktop, VS Code, etc.)
-can query leads in plain language instead of filling in the REST params by
-hand. It shares the same SQLite-backed data as the REST API.
-
-The `send_report_to_telegram` tool sends a report to the chat configured by
-`TELEGRAM_CHAT_ID` using `TELEGRAM_BOT_TOKEN`. The agent must call it with
-`confirmed=true` only after the user explicitly asks to send the report. It
-splits long reports into multiple messages; sending is not automatic.
-
-Run it directly to sanity-check it starts:
-
-```bash
-python -m app.mcp_server
-```
-
-To connect it from an MCP host, point the host's server config at this
-command, e.g. for Claude Desktop / VS Code `mcp.json`:
+Local (stdio) for VS Code or Claude Desktop:
 
 ```json
 {
-  "mcpServers": {
-    "muse-contractor-leads": {
+  "servers": {
+    "networking-events": {
       "command": "/absolute/path/to/.venv/bin/python",
       "args": ["-m", "app.mcp_server"],
-      "cwd": "/absolute/path/to/leadagent"
+      "cwd": "/absolute/path/to/Networking"
     }
   }
 }
 ```
 
-Once connected, you can ask things like "find electrical leads within 50
-miles of 10001" and the host will call `search_leads` for you.
+Hosted (SSE): `https://<your-host>/mcp/sse` with `Authorization: Bearer <MCP_API_KEY>`.
+The endpoint returns 503 if `MCP_API_KEY` is not set.
 
-## Hosted MCP endpoint
+## Deploy on Render (free)
 
-The deployed app serves MCP over SSE at `/mcp/sse`. It requires `MCP_API_KEY`
-(sent as `Authorization: Bearer <key>` or `X-API-Key: <key>`); without the
-variable the endpoint returns 503. Render generates the key on first deploy.
+1. **New + → Blueprint**, pick this repo. Render reads `render.yaml`
+   (service `networking-connector`) and generates `API_KEY` and `MCP_API_KEY`.
+2. Add `TAVILY_API_KEY` (and optionally the Telegram values).
+3. Keep it awake with a free monitor (for example cron-job.org or UptimeRobot) on
+   `https://<service>.onrender.com/health` every 5 minutes.
+
+Render's free plan wipes the SQLite file on every redeploy. To keep events and
+contacts, set `DATABASE_URL` to a free external Postgres (Neon, Supabase).
 
 ## Free always-on hosting (Oracle Cloud Always Free)
 
-1. Create an Oracle Cloud account and an Always Free Ubuntu VM (Ampere A1 or E2.1.Micro).
-2. In the VM's subnet Security List, add ingress rules for TCP ports 80 and 443.
-3. Create a free subdomain at duckdns.org pointing to the VM's public IP.
-4. SSH in and run:
+1. Create an Always Free Ubuntu VM and open TCP ports 80 and 443 in its Security List.
+2. Point a free DuckDNS name at the VM's public IP.
+3. On the VM:
    ```bash
    git clone https://github.com/sadiik1975/Networking.git && cd Networking
    DOMAIN=yourname.duckdns.org bash deploy/oracle/setup.sh
    ```
-5. Add `TAVILY_API_KEY` etc. to `~/Networking/.env`, then `sudo systemctl restart networking`.
-6. Point Muse at `https://yourname.duckdns.org/mcp/sse` with `Authorization: Bearer <MCP_API_KEY>`.
+4. Add `TAVILY_API_KEY` to `~/Networking/.env`, then `sudo systemctl restart networking`.
 
-The service restarts automatically on crash or reboot, and SQLite data persists on the VM disk.
-
-## Render Deployment
-
-This repository includes a Render Blueprint (`render.yaml`). To deploy it:
-
-1. Sign in to Render and connect your GitHub account.
-2. In the Render dashboard, choose **New +** → **Blueprint** and select this repository.
-3. Review the `been-ventures` web service and deploy it.
-4. Use the `onrender.com` URL Render assigns as the public company website.
-
-The free web service may sleep when idle, and its local SQLite data is not
-persistent across redeploys. Configure `DATABASE_URL` with a persistent
-database before relying on stored production data.
+The service restarts on crash or reboot, and SQLite data stays on the VM disk.

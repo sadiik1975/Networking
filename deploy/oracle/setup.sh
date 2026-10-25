@@ -15,8 +15,8 @@ python3 -m venv .venv
 
 if [ ! -f .env ]; then
   {
-    echo "DATABASE_URL=sqlite:///$APP_DIR/leads.db"
-    echo "DISPATCH_API_KEY=$(openssl rand -hex 24)"
+    echo "DATABASE_URL=sqlite:///$APP_DIR/networking.db"
+    echo "API_KEY=$(openssl rand -hex 24)"
     echo "MCP_API_KEY=$(openssl rand -hex 24)"
     echo "# TAVILY_API_KEY="
     echo "# TELEGRAM_BOT_TOKEN="
