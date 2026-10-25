@@ -32,6 +32,7 @@ app.include_router(events.router)
 app.include_router(matchmaking.router)
 
 # SSE transport for hosted MCP clients: GET /mcp/sse, POST /mcp/messages/
+app.mount("/mcp/key/{key}", McpAuthMiddleware(mcp.sse_app()))
 app.mount("/mcp", McpAuthMiddleware(mcp.sse_app()))
 
 

@@ -25,6 +25,8 @@ class McpAuthMiddleware:
         auth = headers.get("authorization", "")
         if auth.lower().startswith("bearer "):
             supplied = auth[7:].strip()
+        # Clients that cannot send headers put the key in the URL: /mcp/key/<key>/sse
+        supplied = scope.get("path_params", {}).get("key") or supplied
 
         if not hmac.compare_digest(supplied.encode(), expected.encode()):
             await self._reject(send, 401, b"Invalid or missing MCP credentials")
