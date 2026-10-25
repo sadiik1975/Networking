@@ -2,18 +2,12 @@ services:
   - type: web
     name: been-ventures
     runtime: python
-    # Starter never sleeps and supports a persistent disk (free does neither).
-    plan: starter
+    # Free plan sleeps after ~15 min idle; ping /health every 5 min to keep it warm.
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
-    disk:
-      name: data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
-      - key: DATABASE_URL
-        value: sqlite:////var/data/leads.db
       - key: DISPATCH_API_KEY
         generateValue: true
       - key: MCP_API_KEY
