@@ -1,8 +1,9 @@
-"""Event candidate discovery via Tavily web search.
+"""Event candidate discovery via Tavily web search. (https://raw.githubusercontent.com/sadiik1975/Networking/main/app/event_discovery.py)
 
 Results are unverified web hits. Nothing is saved until add_event is called
 explicitly with details the user has checked.
 """
+
 import re
 from datetime import date
 
@@ -15,6 +16,7 @@ STATE_NAMES = {
     "NY": "New York", "NJ": "New Jersey", "CT": "Connecticut", "MA": "Massachusetts",
     "PA": "Pennsylvania", "DE": "Delaware", "DC": "Washington DC",
 }
+
 GROUP_TERMS = {
     "B2B_Networking": "B2B business networking mixer",
     "Small_Business": "small business owners networking expo",
@@ -26,6 +28,7 @@ GROUP_TERMS = {
     "Supplier_Diversity": "supplier diversity minority supplier development council",
     "Tech_Contracting": "tech contractors small business technology networking",
 }
+
 EVENT_WORDS = re.compile(r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop|meetup", re.I)
 
 
@@ -34,17 +37,22 @@ class DiscoveryError(Exception):
 
 
 def _search(query: str, max_results: int) -> list[dict]:
-    if not settings.tavily_api_key:
+    api_key = (settings.tavily_api_key or "").strip()
+    if not api_key:
         raise DiscoveryError("TAVILY_API_KEY is not set")
+    api_url = (settings.tavily_api_url or "").strip()
+    if not api_url.startswith("http"):
+        api_url = "https://api.tavily.com/search"
     try:
-        response = httpx.post(
-            settings.tavily_api_url,
-            headers={"Authorization": f"Bearer {settings.tavily_api_key}"},
-            json={"query": query, "max_results": max_results, "search_depth": "basic"},
-            timeout=30,
-        )
+        # trust_env=False: never let platform proxy variables break the request.
+        with httpx.Client(trust_env=False, timeout=30) as client:
+            response = client.post(
+                api_url,
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={"query": query, "max_results": max_results, "search_depth": "basic"},
+            )
     except httpx.HTTPError as exc:
-        raise DiscoveryError(f"Tavily request failed: {type(exc).__name__}") from exc
+        raise DiscoveryError(f"Tavily request failed: {type(exc).__name__}: {exc}") from exc
     if response.status_code in {401, 403}:
         raise DiscoveryError("Tavily rejected the API key")
     if response.status_code == 429:
