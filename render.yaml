@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: been-ventures
+    name: networking-connector
     runtime: python
     # Free plan sleeps after ~15 min idle; ping /health every 5 min to keep it warm.
     plan: free
