@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Been Ventures Inc. is building a contractor discovery and matching connector for AI-assisted project search and dispatch."
+    >
+    <meta name="theme-color" content="#f6f5f1">
+    <title>Been Ventures Inc. | Contractor Discovery &amp; Matching</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18251f;
+        --muted: #59665e;
+        --paper: #f6f5f1;
+        --card: #fffefa;
+        --green: #284b3b;
+        --green-dark: #1d372b;
+        --lime: #d8e5a2;
+        --line: #e2e3db;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 48px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 82px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--green);
+        color: white;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+
+      .nav-link {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .nav-link:hover,
+      .text-link:hover {
+        color: var(--green);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+        align-items: center;
+        gap: 64px;
+        padding: 88px 0 92px;
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 650px;
+        margin-bottom: 22px;
+        font-size: clamp(42px, 6vw, 70px);
+        font-weight: 650;
+        letter-spacing: -0.065em;
+        line-height: 1.04;
+      }
+
+      .hero-copy {
+        max-width: 590px;
+        margin-bottom: 30px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 20px;
+        border: 1px solid var(--green);
+        border-radius: 7px;
+        background: var(--green);
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background 140ms ease, transform 140ms ease;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+        background: var(--green-dark);
+      }
+
+      .text-link {
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .project-card {
+        position: relative;
+        overflow: hidden;
+        padding: 30px;
+        border: 1px solid #dce2d4;
+        border-radius: 14px;
+        background: var(--lime);
+      }
+
+      .project-card::after {
+        position: absolute;
+        right: -54px;
+        bottom: -95px;
+        width: 240px;
+        height: 240px;
+        border: 1px solid rgb(40 75 59 / 18%);
+        border-radius: 50%;
+        box-shadow: 0 0 0 24px rgb(40 75 59 / 5%), 0 0 0 50px rgb(40 75 59 / 4%);
+        content: "";
+      }
+
+      .card-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 42px;
+        color: var(--green-dark);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #557c4c;
+      }
+
+      .project-card h2 {
+        max-width: 300px;
+        margin-bottom: 12px;
+        font-size: 30px;
+        letter-spacing: -0.045em;
+        line-height: 1.15;
+      }
+
+      .project-card p {
+        position: relative;
+        z-index: 1;
+        max-width: 330px;
+        margin-bottom: 0;
+        color: #3d5847;
+        font-size: 15px;
+      }
+
+      .section {
+        padding: 76px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-heading {
+        max-width: 640px;
+        margin-bottom: 36px;
+      }
+
+      .section-heading h2 {
+        margin-bottom: 12px;
+        font-size: clamp(30px, 4vw, 42px);
+        font-weight: 650;
+        letter-spacing: -0.05em;
+        line-height: 1.15;
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .feature {
+        min-height: 202px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+      }
+
+      .feature-number {
+        display: block;
+        margin-bottom: 30px;
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+      }
+
+      .feature h3 {
+        margin-bottom: 8px;
+        font-size: 18px;
+        letter-spacing: -0.025em;
+      }
+
+      .feature p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .about {
+        display: grid;
+        grid-template-columns: 0.7fr 1.3fr;
+        gap: 48px;
+        padding: 58px 0 76px;
+        border-top: 1px solid var(--line);
+      }
+
+      .about h2 {
+        margin-bottom: 0;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+      }
+
+      .about p {
+        max-width: 680px;
+        margin-bottom: 16px;
+        color: var(--muted);
+      }
+
+      .about p:last-child {
+        margin-bottom: 0;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+      }
+
+      .footer-inner {
+        display: flex;
+        min-height: 76px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .footer-inner p {
+        margin: 0;
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 36px, 560px);
+        }
+
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 34px;
+          padding: 64px 0 68px;
+        }
+
+        .project-card {
+          min-height: 240px;
+        }
+
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .feature {
+          min-height: auto;
+        }
+
+        .feature-number {
+          margin-bottom: 18px;
+        }
+
+        .about {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .topbar {
+          min-height: 72px;
+        }
+
+        .brand {
+          font-size: 13px;
+        }
+
+        .nav-link {
+          font-size: 12px;
+        }
+
+        .hero-copy {
+          font-size: 16px;
+        }
+
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          justify-content: center;
+          padding: 18px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell topbar">
+      <a class="brand" href="#top" aria-label="Been Ventures Inc. home">
+        <span class="brand-mark" aria-hidden="true">BV</span>
+        <span>Been Ventures Inc.</span>
+      </a>
+      <a class="nav-link" href="#project">Our project</a>
+    </header>
+
+    <main id="top">
+      <section class="shell hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">Practical tools for a connected industry</p>
+          <h1 id="hero-title">Better ways to find the next project.</h1>
+          <p class="hero-copy">
+            Been Ventures Inc. is developing software to make local construction
+            opportunities easier to discover and contractor matches easier to
+            coordinate.
+          </p>
+          <div class="actions">
+            <a class="button" href="#project">Explore the project</a>
+            <a class="text-link" href="/docs">View API docs <span aria-hidden="true">&rarr;</span></a>
+          </div>
+        </div>
+
+        <aside class="project-card" aria-label="Project in development">
+          <div class="card-label"><span class="status-dot" aria-hidden="true"></span>Project in development</div>
+          <h2>Contractor Discovery &amp; Matching</h2>
+          <p>
+            A connector project for searching construction leads, finding
+            relevant contractors, and supporting dispatch workflows.
+          </p>
+        </aside>
+      </section>
+
+      <section class="section" id="project" aria-labelledby="project-title">
+        <div class="shell">
+          <div class="section-heading">
+            <p class="eyebrow">What we're building</p>
+            <h2 id="project-title">Construction discovery, made easier to work with.</h2>
+            <p>
+              The project brings lead search and contractor matching together
+              behind an API that software and AI assistants can use.
+            </p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature">
+              <span class="feature-number">01 / DISCOVER</span>
+              <h3>Search local opportunities</h3>
+              <p>Explore construction leads by trade, location, distance, and project value.</p>
+            </article>
+            <article class="feature">
+              <span class="feature-number">02 / MATCH</span>
+              <h3>Find a relevant fit</h3>
+              <p>Compare a project's trade and location with contractor service areas.</p>
+            </article>
+            <article class="feature">
+              <span class="feature-number">03 / CONNECT</span>
+              <h3>Build for assistant workflows</h3>
+              <p>REST API and MCP tools let compatible assistants search and retrieve project information.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="shell about" aria-labelledby="about-title">
+        <h2 id="about-title">About Been Ventures</h2>
+        <div>
+          <p>
+            Been Ventures Inc. is an independent business exploring practical
+            software for construction discovery and coordination. Its current
+            project focuses on making structured project and contractor
+            information accessible through modern APIs.
+          </p>
+          <p>
+            The connector is being developed with a focus on clear workflows:
+            search first, review matches, then coordinate with confirmation.
+            Outreach is queued rather than automatically sent.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell footer-inner">
+        <p>&copy; Been Ventures Inc.</p>
+        <p>Contractor Discovery &amp; Matching</p>
+      </div>
+    </footer>
+  </body>
+</html>
