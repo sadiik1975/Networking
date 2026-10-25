@@ -110,6 +110,21 @@ The deployed app serves MCP over SSE at `/mcp/sse`. It requires `MCP_API_KEY`
 (sent as `Authorization: Bearer <key>` or `X-API-Key: <key>`); without the
 variable the endpoint returns 503. Render generates the key on first deploy.
 
+## Free always-on hosting (Oracle Cloud Always Free)
+
+1. Create an Oracle Cloud account and an Always Free Ubuntu VM (Ampere A1 or E2.1.Micro).
+2. In the VM's subnet Security List, add ingress rules for TCP ports 80 and 443.
+3. Create a free subdomain at duckdns.org pointing to the VM's public IP.
+4. SSH in and run:
+   ```bash
+   git clone https://github.com/sadiik1975/Networking.git && cd Networking
+   DOMAIN=yourname.duckdns.org bash deploy/oracle/setup.sh
+   ```
+5. Add `TAVILY_API_KEY` etc. to `~/Networking/.env`, then `sudo systemctl restart networking`.
+6. Point Muse at `https://yourname.duckdns.org/mcp/sse` with `Authorization: Bearer <MCP_API_KEY>`.
+
+The service restarts automatically on crash or reboot, and SQLite data persists on the VM disk.
+
 ## Render Deployment
 
 This repository includes a Render Blueprint (`render.yaml`). To deploy it:

@@ -1,0 +1,6 @@
+__DOMAIN__ {
+	reverse_proxy 127.0.0.1:8000 {
+		# Keep the SSE stream flowing for MCP.
+		flush_interval -1
+	}
+}
