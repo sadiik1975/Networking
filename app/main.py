@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -5,16 +6,19 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
+from app import telegram_bot
 from app.config import settings
 from app.database import init_db
 from app.mcp_auth import McpAuthMiddleware
 from app.mcp_server import mcp
-from app.routers import events, matchmaking
+from app.routers import events, matchmaking, telegram
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    # Best-effort: point the Telegram ask-bot webhook at this service.
+    await asyncio.to_thread(telegram_bot.register_webhook)
     yield
 
 
@@ -31,6 +35,7 @@ app = FastAPI(
 
 app.include_router(events.router)
 app.include_router(matchmaking.router)
+app.include_router(telegram.router)
 
 # SSE transport for hosted MCP clients: GET /mcp/sse, POST /mcp/messages/
 app.mount("/mcp/key/{key}", McpAuthMiddleware(mcp.sse_app()))

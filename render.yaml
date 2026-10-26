@@ -21,3 +21,10 @@ services:
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
+      # Optional: secret Telegram echoes on ask-bot webhook calls.
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      # Optional: public base URL for webhook self-registration
+      # (Render sets RENDER_EXTERNAL_URL automatically when unset).
+      - key: PUBLIC_BASE_URL
+        sync: false
