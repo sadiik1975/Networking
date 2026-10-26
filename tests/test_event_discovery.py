@@ -59,3 +59,52 @@ def test_discover_candidates_reports_rejected_key(monkeypatch):
     result = event_discovery.discover_candidates(["NY"], ["MWBE"])
 
     assert result == {"error": "Tavily rejected the API key", "candidates": []}
+
+
+def test_discover_candidates_defaults_to_northeast_nightlife(monkeypatch):
+    monkeypatch.setattr(settings, "tavily_api_key", "test-api-key")
+    queries = []
+
+    def fake_post(url, **kwargs):
+        queries.append(kwargs["json"]["query"])
+        return httpx.Response(
+            200,
+            json={"results": []},
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+
+    result = event_discovery.discover_candidates()
+
+    assert result["count"] == 0
+    assert result["candidates"] == []
+    assert len(queries) == 1
+    assert "hip-hop" in queries[0]
+    assert all(place in queries[0] for place in ("New York", "New Jersey", "Connecticut", "Massachusetts"))
+
+
+def test_nightlife_results_are_recognized_as_events(monkeypatch):
+    monkeypatch.setattr(settings, "tavily_api_key", "test-api-key")
+
+    def fake_post(url, **kwargs):
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "title": "Friday Hip-Hop Party",
+                        "url": "https://events.example/friday-party",
+                        "content": "Live DJs and dancing.",
+                    }
+                ]
+            },
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+
+    result = event_discovery.discover_candidates(["NY"], ["Hip_Hop"])
+
+    assert result["candidates"][0]["matched_group"] == "Hip_Hop"
+    assert result["candidates"][0]["looks_like_event"] is True

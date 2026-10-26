@@ -1,20 +1,22 @@
-# Networking Events Hub
+# After Hours — Northeast Nightlife
 
-A connector for finding, tracking and following up on B2B networking events for
-**Borough Build** and **Been Ventures**. It serves a REST API and an MCP endpoint
-so an AI agent host (Muse, Claude Desktop, VS Code) can use the same tools.
+After Hours helps you discover and keep track of hip-hop, R&B, Latin, Afrobeats,
+concert, lounge and party events across **New York, New Jersey, Connecticut and
+Massachusetts**. It serves a REST API and an MCP endpoint for AI agent hosts.
+
+The guide celebrates the Black and Latino artists, DJs, venues and promoters
+shaping the region's nightlife, and welcomes everyone who comes for the music.
 
 ## What it does
 
-- **Discover events** across NY, NJ, CT, MA, PA, DE and DC with Tavily web search.
-  Results are unverified candidates; nothing is saved until you confirm one.
-- **Track events** you plan to attend: `discovered`, `interested`, `registered`,
-  `attended`, `skipped`, optionally tagged with the company attending.
-- **Capture contacts** from business cards, voice notes and conversation summaries.
-- **Draft follow-ups** per company. Drafts are never sent.
-- **Score prospects** against Borough Build or Been Ventures (heuristic, 0-10).
-- **Telegram reminders** for upcoming events, sent only when you confirm.
-- **Company profiles and matching** (`/companies`, `/match`) for B2B partner lookup.
+- **Discover nightlife events** with Tavily web search. Search results are
+  unverified candidates; check the organizer's page before saving.
+- **Track plans** as discovered, interested, registered, attended or skipped.
+- **Get reminders** for upcoming saved events through Telegram, only when
+  explicitly confirmed.
+- **Keep event captures and follow-ups.** Contact capture, business matching
+  and company profile endpoints from the original app remain available for
+  existing integrations.
 
 ## Run locally
 
@@ -32,28 +34,25 @@ Docs: `http://127.0.0.1:8000/docs`. Run the tests with `pytest tests`.
 All routes except `/health` and `/` need `X-API-Key` (`API_KEY`).
 
 - `GET /events`, `GET /events/discover`, `POST /events`, `PATCH /events/{id}`
-- `POST /contacts`, `GET /contacts`, `PATCH /contacts/{id}`, `POST /contacts/{id}/followup`
-- `POST /compatibility`, `POST /reminders/telegram`
-- `POST/GET/PATCH/DELETE /companies`, `POST /match`
+- `POST /reminders/telegram`
+- Legacy integrations: `/contacts`, `/compatibility`, `/companies`, `/match`
 
-Brand keys are `borough_build` and `been_ventures`. Edit their descriptions and
-follow-up offerings in [app/brands.py](app/brands.py).
+By default, event discovery searches NY, NJ, CT and MA for nightlife. The
+supported states also include PA, DE and DC. Discovery categories are
+`Nightlife`, `Hip_Hop`, `R_and_B`, `Latin`, `Afrobeats`, `Live_Music`, `Lounges`,
+`Concerts` and `Parties`. Add `TAVILY_API_KEY` to `.env` to enable web discovery.
 
 ## MCP tools
 
-`search_networking_events`, `discover_networking_event_candidates`,
-`confirm_networking_event`, `update_networking_event`,
-`process_muse_handsfree_context`, `list_networking_contacts`,
-`update_networking_contact`, `match_credentials_compatibility`,
-`generate_tailored_pitch_deck_or_followup`, `send_event_reminders_to_telegram`,
-`send_report_to_telegram`.
+The MCP endpoint exposes the same event, reminder and legacy integration tools.
+Some tool names retain "networking" for compatibility with existing clients.
 
 Local (stdio) for VS Code or Claude Desktop:
 
 ```json
 {
   "servers": {
-    "networking-events": {
+    "after-hours-nightlife": {
       "command": "/absolute/path/to/.venv/bin/python",
       "args": ["-m", "app.mcp_server"],
       "cwd": "/absolute/path/to/Networking"
@@ -67,8 +66,8 @@ The endpoint returns 503 if `MCP_API_KEY` is not set.
 
 ## Deploy on Render (free)
 
-1. **New + → Blueprint**, pick this repo. Render reads `render.yaml`
-   (service `networking-connector`) and generates `API_KEY` and `MCP_API_KEY`.
+1. **New + → Blueprint**, pick this repo. Render reads `render.yaml` and
+   generates `API_KEY` and `MCP_API_KEY`.
 2. Add `TAVILY_API_KEY` (and optionally the Telegram values).
 3. Keep it awake with a free monitor (for example cron-job.org or UptimeRobot) on
    `https://<service>.onrender.com/health` every 5 minutes.

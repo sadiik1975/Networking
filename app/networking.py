@@ -3,10 +3,13 @@ import re
 
 from app.brands import BRAND_KEYS, get_brands
 
-DEFAULT_STATES = ["NY", "NJ", "CT", "MA", "PA", "DE", "DC"]
+DEFAULT_STATES = ["NY", "NJ", "CT", "MA"]
+SUPPORTED_STATES = [*DEFAULT_STATES, "PA", "DE", "DC"]
 TARGET_GROUPS = {
     "B2B_Networking", "Small_Business", "Startup_Tech", "Chamber_of_Commerce",
     "WMBE", "MWBE", "Muslim_Business", "Supplier_Diversity", "Tech_Contracting",
+    "Nightlife", "Hip_Hop", "R_and_B", "Latin", "Afrobeats", "Live_Music",
+    "Lounges", "Concerts", "Parties",
 }
 EVENT_FORMATS = {"in_person", "virtual", "hybrid", "all"}
 PROSPECT_TYPES = {"potential_client", "partner", "investor", "prime_contractor", "networking_host"}

@@ -67,8 +67,8 @@ def add_event(
         parsed = date.fromisoformat(event_date)
     except ValueError:
         return {"error": "event_date must be YYYY-MM-DD"}
-    if state.upper() not in networking.DEFAULT_STATES:
-        return {"error": f"state must be within {networking.DEFAULT_STATES}"}
+    if state.upper() not in networking.SUPPORTED_STATES:
+        return {"error": f"state must be within {networking.SUPPORTED_STATES}"}
     if event_format not in networking.EVENT_FORMATS - {"all"}:
         return {"error": "event_format must be in_person, virtual, or hybrid"}
     groups = target_groups or []
@@ -109,8 +109,8 @@ def search_events(
 ) -> dict:
     states_up = {s.upper() for s in (states or networking.DEFAULT_STATES)}
     groups = set(target_groups or [])
-    if not states_up <= set(networking.DEFAULT_STATES):
-        return {"error": f"states must be within {networking.DEFAULT_STATES}"}
+    if not states_up <= set(networking.SUPPORTED_STATES):
+        return {"error": f"states must be within {networking.SUPPORTED_STATES}"}
     if not groups <= networking.TARGET_GROUPS:
         return {"error": f"target_groups must be within {sorted(networking.TARGET_GROUPS)}"}
     if event_format not in networking.EVENT_FORMATS:
@@ -162,7 +162,7 @@ def reminder_digest(db: Session, days_ahead: int = 7) -> dict:
         return found
     if not found["events"]:
         return {"count": 0, "text": f"No saved events in the next {days_ahead} days."}
-    lines = [f"Upcoming networking events (next {days_ahead} days):"]
+    lines = [f"Upcoming nightlife events (next {days_ahead} days):"]
     for e in found["events"]:
         when = f"{e['date']} {e['time']}".strip()
         place = e["location"] or e["format"].replace("_", " ")

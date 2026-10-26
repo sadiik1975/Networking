@@ -18,6 +18,15 @@ STATE_NAMES = {
 }
 
 GROUP_TERMS = {
+    "Nightlife": "hip-hop R&B Latin reggaeton Afrobeats nightlife lounges parties concerts DJs",
+    "Hip_Hop": "hip-hop rap nightlife party concert DJ",
+    "R_and_B": "R&B nightlife live music concert party",
+    "Latin": "Latin music nightlife reggaeton salsa bachata party",
+    "Afrobeats": "Afrobeats nightlife party concert DJ",
+    "Live_Music": "live music nightlife concert show",
+    "Lounges": "lounge nightlife events DJ live music",
+    "Concerts": "hip-hop R&B Latin music concert",
+    "Parties": "hip-hop Latin R&B party nightlife DJ",
     "B2B_Networking": "B2B business networking mixer",
     "Small_Business": "small business owners networking expo",
     "Startup_Tech": "startup founders technology AI networking meetup",
@@ -28,8 +37,11 @@ GROUP_TERMS = {
     "Supplier_Diversity": "supplier diversity minority supplier development council",
     "Tech_Contracting": "tech contractors small business technology networking",
 }
-
-EVENT_WORDS = re.compile(r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop|meetup", re.I)
+EVENT_WORDS = re.compile(
+    r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop|meetup|"
+    r"nightlife|party|parties|lounge|club|concert|live music|DJ|festival|show",
+    re.I,
+)
 
 
 class DiscoveryError(Exception):
@@ -69,9 +81,9 @@ def discover_candidates(
     max_results: int = 10,
 ) -> dict:
     states_up = [s.upper() for s in (states or networking.DEFAULT_STATES)]
-    groups = target_groups or ["B2B_Networking"]
-    if not set(states_up) <= set(networking.DEFAULT_STATES):
-        return {"error": f"states must be within {networking.DEFAULT_STATES}"}
+    groups = target_groups or ["Nightlife"]
+    if not set(states_up) <= set(networking.SUPPORTED_STATES):
+        return {"error": f"states must be within {networking.SUPPORTED_STATES}"}
     if not set(groups) <= networking.TARGET_GROUPS:
         return {"error": f"target_groups must be within {sorted(networking.TARGET_GROUPS)}"}
     if event_format not in networking.EVENT_FORMATS:
