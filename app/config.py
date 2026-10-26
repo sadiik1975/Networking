@@ -24,6 +24,13 @@ class Settings:
     # Optional Telegram reminders and reports.
     telegram_bot_token: str | None = os.getenv("TELEGRAM_BOT_TOKEN") or None
     telegram_chat_id: str | None = os.getenv("TELEGRAM_CHAT_ID") or None
+    # Optional secret Telegram echoes on every ask-bot webhook call (header
+    # X-Telegram-Bot-Api-Secret-Token). If unset, only the chat-id check applies.
+    telegram_webhook_secret: str | None = os.getenv("TELEGRAM_WEBHOOK_SECRET") or None
+    # Public base URL of this service, used to self-register the Telegram
+    # webhook on startup. Render sets RENDER_EXTERNAL_URL automatically;
+    # PUBLIC_BASE_URL covers other hosts.
+    public_base_url: str | None = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("PUBLIC_BASE_URL") or None
 
     # Public websites used in follow-up drafts.
     borough_build_url: str = os.getenv("BOROUGH_BUILD_URL", "https://boroughbuild.netlify.app/")
