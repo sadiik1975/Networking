@@ -11,7 +11,7 @@ from app.config import settings
 from app.database import init_db
 from app.mcp_auth import McpAuthMiddleware
 from app.mcp_server import mcp
-from app.routers import ask, events, matchmaking, telegram
+from app.routers import agent, ask, events, matchmaking, signups, telegram
 
 
 @asynccontextmanager
@@ -35,6 +35,8 @@ app = FastAPI(
 )
 
 app.include_router(ask.protected)
+app.include_router(agent.router)
+app.include_router(signups.router)
 app.include_router(events.router)
 app.include_router(matchmaking.router)
 app.include_router(telegram.router)

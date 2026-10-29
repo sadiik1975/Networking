@@ -16,6 +16,7 @@ def init_db() -> None:
     """Create tables and import any curated events from data/networking_events.json."""
     from app import models, events  # noqa: F401  (registers tables)
     from app import company_models  # noqa: F401
+    from app import signup_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
