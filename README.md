@@ -11,6 +11,9 @@ Social, party and nightlife listings are not part of this app.
 
 ## What it does
 
+- **Use the web board** at `/`: connect with the API key (kept only in the
+  browser) to see saved events, run discovery, and ask the board what's
+  coming up.
 - **Discover business networking events** with Tavily web search. Search
   results are unverified candidates; check the organizer's page before saving.
 - **Track plans** as discovered, interested, registered, attended or skipped.
