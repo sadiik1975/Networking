@@ -39,7 +39,7 @@ def health_check(db: Session = Depends(get_db)) -> HealthResponse:
     return HealthResponse(status="ok", database=db_status, version=settings.app_version)
 
 
-@protected.get("/events", tags=["events"], summary="Search saved nightlife and music events")
+@protected.get("/events", tags=["events"], summary="Search saved business networking events")
 def search_events(
     states: list[str] | None = Query(None),
     target_groups: list[str] | None = Query(None),
@@ -51,7 +51,7 @@ def search_events(
     return _ok(events.search_events(db, states, target_groups, event_format, days_ahead, status))
 
 
-@protected.get("/events/discover", tags=["events"], summary="Web-search for unverified nightlife event candidates")
+@protected.get("/events/discover", tags=["events"], summary="Web-search for unverified business networking event candidates")
 def discover_events(
     states: list[str] | None = Query(None),
     target_groups: list[str] | None = Query(None),
@@ -61,7 +61,7 @@ def discover_events(
     return _ok(event_discovery.discover_candidates(states, target_groups, event_format, max_results))
 
 
-@protected.post("/events", status_code=201, tags=["events"], summary="Save a verified nightlife event")
+@protected.post("/events", status_code=201, tags=["events"], summary="Save a verified business networking event")
 def create_event(body: EventCreate, db: Session = Depends(get_db)) -> dict:
     return _ok(events.add_event(
         db, body.title, body.event_date.isoformat(), body.state, body.event_format, body.organizer,
@@ -105,7 +105,7 @@ def compatibility(body: CompatibilityRequest) -> dict:
     return _ok(networking.score_compatibility(**body.model_dump()))
 
 
-@protected.post("/reminders/telegram", tags=["reminders"], summary="Send upcoming nightlife reminders to Telegram")
+@protected.post("/reminders/telegram", tags=["reminders"], summary="Send upcoming business networking reminders to Telegram")
 def send_reminders(body: ReminderRequest, db: Session = Depends(get_db)) -> dict:
     digest = events.reminder_digest(db, body.days_ahead)
     if digest.get("count", 0) == 0:

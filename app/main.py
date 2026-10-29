@@ -26,8 +26,9 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description=(
-        "Discover and track hip-hop, R&B, Latin, lounge, concert and nightlife events "
-        "across NY, NJ, CT and MA. Also available to AI agents over MCP at /mcp/sse."
+        "Discover and track business networking events — MWBE/MBE, supplier diversity, "
+        "chamber of commerce and procurement events across NY, NJ, CT and MA. "
+        "Also available to AI agents over MCP at /mcp/sse."
     ),
     openapi_version="3.1.0",
     lifespan=lifespan,

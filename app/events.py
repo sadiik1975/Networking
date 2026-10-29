@@ -162,7 +162,7 @@ def reminder_digest(db: Session, days_ahead: int = 7) -> dict:
         return found
     if not found["events"]:
         return {"count": 0, "text": f"No saved events in the next {days_ahead} days."}
-    lines = [f"Upcoming nightlife events (next {days_ahead} days):"]
+    lines = [f"Upcoming business networking events (next {days_ahead} days):"]
     for e in found["events"]:
         when = f"{e['date']} {e['time']}".strip()
         place = e["location"] or e["format"].replace("_", " ")

@@ -1,16 +1,18 @@
-# After Hours — Northeast Nightlife
+# Networking Events Hub — Business Networking
 
-After Hours helps you discover and keep track of hip-hop, R&B, Latin, Afrobeats,
-concert, lounge and party events across **New York, New Jersey, Connecticut and
-Massachusetts**. It serves a REST API and an MCP endpoint for AI agent hosts.
+The Networking Events Hub helps Borough Build and Been Ventures discover and
+keep track of **business networking** events — MWBE and MBE firms, supplier
+diversity, chambers of commerce and procurement — across **New York, New
+Jersey, Connecticut and Massachusetts**. It serves a REST API and an MCP
+endpoint for AI agent hosts.
 
-The guide celebrates the Black and Latino artists, DJs, venues and promoters
-shaping the region's nightlife, and welcomes everyone who comes for the music.
+Business only: this hub tracks rooms where businesses meet businesses.
+Social, party and nightlife listings are not part of this app.
 
 ## What it does
 
-- **Discover nightlife events** with Tavily web search. Search results are
-  unverified candidates; check the organizer's page before saving.
+- **Discover business networking events** with Tavily web search. Search
+  results are unverified candidates; check the organizer's page before saving.
 - **Track plans** as discovered, interested, registered, attended or skipped.
 - **Get reminders** for upcoming saved events through Telegram, only when
   explicitly confirmed.
@@ -37,10 +39,12 @@ All routes except `/health` and `/` need `X-API-Key` (`API_KEY`).
 - `POST /reminders/telegram`
 - Legacy integrations: `/contacts`, `/compatibility`, `/companies`, `/match`
 
-By default, event discovery searches NY, NJ, CT and MA for nightlife. The
-supported states also include PA, DE and DC. Discovery categories are
-`Nightlife`, `Hip_Hop`, `R_and_B`, `Latin`, `Afrobeats`, `Live_Music`, `Lounges`,
-`Concerts` and `Parties`. Add `TAVILY_API_KEY` to `.env` to enable web discovery.
+By default, event discovery searches NY, NJ, CT and MA for `MWBE`,
+`Supplier_Diversity` and `B2B_Networking`. The supported states also include
+PA, DE and DC. Discovery categories are `B2B_Networking`, `Small_Business`,
+`Startup_Tech`, `Chamber_of_Commerce`, `WMBE`, `MWBE`, `Muslim_Business`,
+`Supplier_Diversity`, `Tech_Contracting` and `Procurement_Matchmaking`. Add
+`TAVILY_API_KEY` to `.env` to enable web discovery.
 
 ## MCP tools
 
@@ -52,7 +56,7 @@ Local (stdio) for VS Code or Claude Desktop:
 ```json
 {
   "servers": {
-    "after-hours-nightlife": {
+    "networking-events-hub": {
       "command": "/absolute/path/to/.venv/bin/python",
       "args": ["-m", "app.mcp_server"],
       "cwd": "/absolute/path/to/Networking"

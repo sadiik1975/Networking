@@ -1,4 +1,4 @@
-"""MCP server exposing After Hours event tools to an agent host (Muse, Claude Desktop, VS Code).
+"""MCP server exposing Networking Events Hub tools to an agent host (Muse, Claude Desktop, VS Code).
 
 Run locally with `python -m app.mcp_server` (stdio). When hosted, the same tools
 are served over SSE at /mcp/sse by app.main.
@@ -13,7 +13,7 @@ from app.database import SessionLocal, init_db
 
 # Allow public hostnames when hosted; the default only accepts localhost Host headers.
 mcp = FastMCP(
-    "after-hours-nightlife",
+    "networking-events-hub",
     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
@@ -37,11 +37,13 @@ def search_networking_events(
     days_ahead: int = 60,
     statuses: list[str] | None = None,
 ) -> dict:
-    """List saved upcoming nightlife and music events.
+    """List saved upcoming business networking events.
 
     states: any of NY, NJ, CT, MA, PA, DE, DC (default NY, NJ, CT and MA).
-    target_groups: Nightlife, Hip_Hop, R_and_B, Latin, Afrobeats, Live_Music, Lounges,
-        Concerts, Parties, or legacy business categories (default Nightlife).
+    target_groups: MWBE, WMBE, Supplier_Diversity, Procurement_Matchmaking,
+        B2B_Networking, Chamber_of_Commerce, Small_Business, Startup_Tech,
+        Tech_Contracting, Muslim_Business (default MWBE, Supplier_Diversity,
+        B2B_Networking).
     event_format: in_person, virtual, hybrid, all.
     statuses: discovered, interested, registered, attended, skipped (default any).
     """
@@ -56,7 +58,7 @@ def discover_networking_event_candidates(
     event_format: str = "all",
     max_results: int = 10,
 ) -> dict:
-    """Web-search for nightlife and music event candidates. Results are unverified and not saved."""
+    """Web-search for business networking event candidates. Results are unverified and not saved."""
     return event_discovery.discover_candidates(states, target_groups, event_format, max_results)
 
 

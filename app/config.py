@@ -8,7 +8,7 @@ load_dotenv()
 class Settings:
     """Runtime configuration, overridable via environment variables."""
 
-    app_name: str = "After Hours — Northeast Nightlife"
+    app_name: str = "Networking Events Hub"
     app_version: str = "2.0.0"
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./networking.db")
 
