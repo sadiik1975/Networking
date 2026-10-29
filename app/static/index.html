@@ -56,6 +56,7 @@
       }
       .button:hover { transform: translateY(-1px); border-color: var(--accent); }
       .button-primary { border-color: transparent; background: var(--accent); color: #fff; }
+      .button.small { min-height: 38px; padding: 0 14px; font-size: .88rem; }
       .status-line { margin-top: 12px; color: var(--muted); font-size: .92rem; }
       .status-line.ok { color: #7dd87d; }
       .status-line.err { color: #ff8a7a; }
@@ -72,11 +73,10 @@
       .checks { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 4px 0 14px; }
       .checks label { display: inline-flex; gap: 7px; align-items: center; color: var(--ink); font-size: .94rem; cursor: pointer; }
       .chat { display: flex; flex-direction: column; gap: 12px; }
-      .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+      .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
       .msg { max-width: 88%; padding: 11px 14px; border-radius: 14px; font-size: .96rem; white-space: pre-wrap; }
       .msg.user { align-self: flex-end; background: var(--accent); color: #fff; }
       .msg.bot { align-self: flex-start; background: #1d1d27; border: 1px solid var(--line); }
-      .msg.bot a { color: #ffb3ab; }
       .note { padding: 20px 23px; border-left: 3px solid var(--accent); border-radius: 0 14px 14px 0; color: var(--muted); background: var(--panel); }
       .note strong { color: var(--ink); }
       footer { padding: 28px 0 38px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
@@ -106,7 +106,7 @@
     <main class="wrap">
       <div class="eyebrow">Business networking · Northeast</div>
       <h1>Meet businesses. <span>Do business.</span></h1>
-      <p class="lead">The working board for Borough Build and Been Ventures: MWBE and MBE firms, supplier-diversity rooms, chambers of commerce and procurement events. Connect with your API key to see your board, search for new rooms, and ask what's coming up.</p>
+      <p class="lead">The working board for Borough Build and Been Ventures: MWBE and MBE firms, supplier-diversity rooms, chambers of commerce and procurement events. Connect with your API key, then just ask — or scroll the board yourself.</p>
 
       <section aria-labelledby="connect-title">
         <div class="panel">
@@ -117,6 +117,29 @@
             <button class="button" id="disconnectBtn" type="button" hidden>Forget key</button>
           </div>
           <p class="status-line" id="connectStatus">Not connected. Your key stays in this browser only — it is never sent anywhere except this app.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="ask-title">
+        <div class="section-head">
+          <h2 id="ask-title">Ask</h2>
+          <p class="section-note">Talk to the board like you'd talk to an assistant. It can check your saved events, find new rooms, and — only when you say yes — save one.</p>
+        </div>
+        <div class="panel chat">
+          <div class="chat-log" id="chatLog">
+            <div class="msg bot">Ask me what's on your board, what's this week, which rooms are MWBE — or tell me to find new business events.</div>
+          </div>
+          <div class="row" id="chipRow">
+            <button class="button small" type="button" data-q="What's on my board this week?">This week</button>
+            <button class="button small" type="button" data-q="Show my MWBE events">MWBE events</button>
+            <button class="button small" type="button" data-q="Find procurement or matchmaking events in New York">Find procurement events</button>
+            <button class="button small" type="button" data-q="What should I do next?">What should I do next?</button>
+          </div>
+          <div class="row">
+            <input type="text" id="askInput" placeholder="Ask about business networking…" autocomplete="off">
+            <button class="button button-primary" id="askBtn" type="button">Ask</button>
+          </div>
+          <div class="cards" id="askCards"></div>
         </div>
       </section>
 
@@ -145,22 +168,6 @@
         </div>
       </section>
 
-      <section aria-labelledby="ask-title">
-        <div class="section-head">
-          <h2 id="ask-title">Ask the board</h2>
-          <p class="section-note">Answers come from your saved board only. Try: “what's this week?”, “show MWBE”, “anything in Albany?”</p>
-        </div>
-        <div class="panel chat">
-          <div class="chat-log" id="chatLog">
-            <div class="msg bot">Ask me about your saved events — what's next, what's this week, or which ones are MWBE.</div>
-          </div>
-          <div class="row">
-            <input type="text" id="askInput" placeholder="Ask about your board…" autocomplete="off">
-            <button class="button button-primary" id="askBtn" type="button">Ask</button>
-          </div>
-        </div>
-      </section>
-
       <section class="note" aria-label="Business only commitment">
         <strong>Business only.</strong> This hub tracks rooms where businesses meet businesses — MWBE and MBE owners, prime contractors, agencies and buyers. Social and nightlife listings don't make the board.
       </section>
@@ -183,8 +190,8 @@
       const DEFAULT_GROUPS = ["MWBE", "Supplier_Diversity", "B2B_Networking"];
       const $ = (id) => document.getElementById(id);
       let boardEvents = [];
+      let history = [];
 
-      // Build the discovery checkboxes.
       for (const [value, label] of GROUPS) {
         const lab = document.createElement("label");
         const cb = document.createElement("input");
@@ -203,8 +210,8 @@
 
       function getKey() { return localStorage.getItem("hub_api_key") || ""; }
 
-      async function api(path) {
-        const res = await fetch(path, { headers: { "X-API-Key": getKey() } });
+      async function api(path, options) {
+        const res = await fetch(path, Object.assign({ headers: { "X-API-Key": getKey() } }, options || {}));
         if (res.status === 401) throw new Error("That key didn't work. Check the API_KEY value in the app's Render settings.");
         if (!res.ok) {
           let detail = "Request failed (" + res.status + ")";
@@ -229,6 +236,15 @@
           (where ? "<p>" + where + "</p>" : "") +
           (e.organizer ? "<p>" + esc(e.organizer) + "</p>" : "") +
           '<div class="chips"><span class="chip status">' + esc(e.status || "") + "</span>" + groups + "</div>" +
+          "</article>";
+      }
+
+      function candidateCard(c) {
+        return '<article class="card">' +
+          '<div class="when">' + esc((c.matched_group || "").replace(/_/g, " ")) + "</div>" +
+          '<h3><a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.title || c.url) + "</a></h3>" +
+          "<p>" + esc((c.snippet || "").slice(0, 220)) + "</p>" +
+          '<div class="chips"><span class="chip">unverified</span></div>' +
           "</article>";
       }
 
@@ -264,7 +280,9 @@
       $("disconnectBtn").addEventListener("click", () => {
         localStorage.removeItem("hub_api_key");
         boardEvents = [];
+        history = [];
         $("boardCards").innerHTML = "";
+        $("askCards").innerHTML = "";
         $("boardStatus").textContent = "Connect above to load your board.";
         $("connectStatus").textContent = "Key forgotten on this browser.";
         $("connectStatus").className = "status-line";
@@ -286,13 +304,7 @@
           const qs = picked.map((g) => "target_groups=" + encodeURIComponent(g)).join("&");
           const data = await api("/events/discover?max_results=10&" + qs);
           const cands = data.candidates || [];
-          $("discoverCards").innerHTML = cands.map((c) =>
-            '<article class="card">' +
-            '<div class="when">' + esc((c.matched_group || "").replace(/_/g, " ")) + "</div>" +
-            '<h3><a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.title || c.url) + "</a></h3>" +
-            "<p>" + esc((c.snippet || "").slice(0, 220)) + "</p>" +
-            '<div class="chips"><span class="chip">unverified</span></div>' +
-            "</article>").join("");
+          $("discoverCards").innerHTML = cands.map(candidateCard).join("");
           $("discoverStatus").textContent = cands.length
             ? cands.length + " candidate(s) found. Open each one and verify the date and details before saving it to your board."
             : "No candidates found for those categories.";
@@ -311,50 +323,49 @@
         return div;
       }
 
-      function eventLine(e) {
-        const where = [e.location, e.state].filter(Boolean).join(", ");
-        return fmtDate(e.date) + (e.time ? " " + e.time : "") + " — " + e.title + (where ? " (" + where + ")" : "");
-      }
-
-      function answerAsk(qRaw) {
-        const q = qRaw.toLowerCase();
-        if (!boardEvents.length) return "Your board is empty right now, or not loaded yet. Connect above, and if it's still empty, use Find new rooms to discover candidates.";
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const inDays = (e, n) => {
-          const d = new Date(e.date + "T12:00:00");
-          return d >= today && (d - today) / 86400000 <= n;
-        };
-        let picked = null, label = "";
-        if (q.includes("week")) { picked = boardEvents.filter((e) => inDays(e, 7)); label = "this week"; }
-        else if (q.includes("month")) { picked = boardEvents.filter((e) => inDays(e, 30)); label = "in the next 30 days"; }
-        else if (/(mwbe|wmbe|mbe|supplier|diversity|procurement|matchmaking|chamber)/.test(q)) {
-          const wanted = ["MWBE", "WMBE", "Supplier_Diversity", "Procurement_Matchmaking", "Chamber_of_Commerce"];
-          picked = boardEvents.filter((e) =>
-            (e.target_groups || []).some((g) => wanted.includes(g)) ||
-            /(mwbe|mbe|supplier|diversity|procurement|chamber)/i.test(e.title + " " + (e.organizer || "")));
-          label = "matching that";
-        } else if (q.includes("next") || q.includes("coming") || q.includes("upcoming") || q.trim() === "events") {
-          picked = boardEvents.slice(0, 5); label = "coming up next";
-        } else {
-          const words = q.split(/[^a-z0-9]+/).filter((w) => w.length > 3);
-          picked = boardEvents.filter((e) =>
-            words.some((w) => (e.title + " " + (e.organizer || "") + " " + (e.location || "") + " " + e.state).toLowerCase().includes(w)));
-          label = "matching that";
-        }
-        if (!picked.length) return "Nothing on your board " + (label || "matches that") + ". Try Find new rooms to discover more.";
-        return "Here's what's " + label + ":\n" + picked.slice(0, 8).map(eventLine).join("\n");
-      }
-
-      function ask() {
-        const text = $("askInput").value.trim();
-        if (!text) return;
-        addMsg(text, "user");
+      async function ask(text) {
+        const question = (text || $("askInput").value).trim();
+        if (!question) return;
         $("askInput").value = "";
+        addMsg(question, "user");
         if (!getKey()) { addMsg("Connect with your API key first, so I can read your board.", "bot"); return; }
-        addMsg(answerAsk(text), "bot");
+        const thinking = addMsg("Thinking…", "bot");
+        try {
+          const data = await api("/ask", {
+            method: "POST",
+            headers: { "X-API-Key": getKey(), "Content-Type": "application/json" },
+            body: JSON.stringify({ question: question, history: history.slice(-6) })
+          });
+          thinking.textContent = data.answer || "I didn't get an answer back — try again.";
+          history.push({ role: "user", content: question }, { role: "assistant", content: data.answer || "" });
+          let cards = "";
+          if (data.events && data.events.length) cards += data.events.map(eventCard).join("");
+          if (data.candidates && data.candidates.length) cards += data.candidates.map(candidateCard).join("");
+          $("askCards").innerHTML = cards;
+          if (data.events && data.events.length) loadBoardSilent();
+        } catch (err) {
+          thinking.textContent = err.message;
+        }
+        $("chatLog").scrollTop = $("chatLog").scrollHeight;
       }
-      $("askBtn").addEventListener("click", ask);
+
+      async function loadBoardSilent() {
+        try {
+          const data = await api("/events?days_ahead=90");
+          boardEvents = data.events || [];
+          $("boardCards").innerHTML = boardEvents.map(eventCard).join("");
+          $("boardStatus").textContent = boardEvents.length
+            ? boardEvents.length + " saved event(s) on your board."
+            : "No saved events in the next 90 days.";
+        } catch (e) { /* board refresh is best-effort after an ask */ }
+      }
+
+      $("askBtn").addEventListener("click", () => ask());
       $("askInput").addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
+      $("chipRow").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-q]");
+        if (btn) ask(btn.getAttribute("data-q"));
+      });
 
       if (getKey()) loadBoard();
     </script>

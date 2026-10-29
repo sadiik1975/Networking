@@ -21,6 +21,12 @@ class Settings:
     tavily_api_key: str | None = os.getenv("TAVILY_API_KEY") or None
     tavily_api_url: str = os.getenv("TAVILY_API_URL", "https://api.tavily.com/search")
 
+    # Ask-the-board chat agent (OpenAI-compatible chat API, e.g. xAI Grok).
+    # If AI_API_KEY is unset, /ask answers from the saved board without AI.
+    ai_api_key: str | None = os.getenv("AI_API_KEY") or None
+    ai_base_url: str = os.getenv("AI_BASE_URL", "https://api.x.ai/v1")
+    ai_model: str = os.getenv("AI_MODEL", "grok-4")
+
     # Optional Telegram reminders and reports.
     telegram_bot_token: str | None = os.getenv("TELEGRAM_BOT_TOKEN") or None
     telegram_chat_id: str | None = os.getenv("TELEGRAM_CHAT_ID") or None
