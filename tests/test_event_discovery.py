@@ -4,19 +4,24 @@ from app import event_discovery
 from app.config import settings
 
 
+def _patch_client_post(monkeypatch, fake_post):
+    """Patch the httpx.Client.post the discovery code actually calls."""
+    monkeypatch.setattr(httpx.Client, "post", fake_post)
+
+
 def test_discover_candidates_uses_tavily_api_key(monkeypatch):
     monkeypatch.setattr(settings, "tavily_api_key", "test-api-key")
     calls = []
 
-    def fake_post(url, **kwargs):
+    def fake_post(self, url, **kwargs):
         calls.append((url, kwargs))
         return httpx.Response(
             200,
             json={
                 "results": [
                     {
-                        "title": "NYC AI Business Networking Mixer",
-                        "url": "https://events.example/ai-mixer",
+                        "title": "NYC AI Business Networking Event",
+                        "url": "https://events.example/ai-networking",
                         "content": "A networking event for AI founders in New York.",
                     }
                 ]
@@ -24,7 +29,7 @@ def test_discover_candidates_uses_tavily_api_key(monkeypatch):
             request=httpx.Request("POST", url),
         )
 
-    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+    _patch_client_post(monkeypatch, fake_post)
 
     result = event_discovery.discover_candidates(
         ["NY"],
@@ -51,21 +56,21 @@ def test_discover_candidates_reports_missing_key_without_request(monkeypatch):
 def test_discover_candidates_reports_rejected_key(monkeypatch):
     monkeypatch.setattr(settings, "tavily_api_key", "invalid-key")
 
-    def fake_post(url, **kwargs):
+    def fake_post(self, url, **kwargs):
         return httpx.Response(401, request=httpx.Request("POST", url))
 
-    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+    _patch_client_post(monkeypatch, fake_post)
 
     result = event_discovery.discover_candidates(["NY"], ["MWBE"])
 
     assert result == {"error": "Tavily rejected the API key", "candidates": []}
 
 
-def test_discover_candidates_defaults_to_northeast_nightlife(monkeypatch):
+def test_discover_candidates_defaults_to_northeast_business(monkeypatch):
     monkeypatch.setattr(settings, "tavily_api_key", "test-api-key")
     queries = []
 
-    def fake_post(url, **kwargs):
+    def fake_post(self, url, **kwargs):
         queries.append(kwargs["json"]["query"])
         return httpx.Response(
             200,
@@ -73,38 +78,42 @@ def test_discover_candidates_defaults_to_northeast_nightlife(monkeypatch):
             request=httpx.Request("POST", url),
         )
 
-    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+    _patch_client_post(monkeypatch, fake_post)
 
     result = event_discovery.discover_candidates()
 
     assert result["count"] == 0
     assert result["candidates"] == []
-    assert len(queries) == 1
-    assert "hip-hop" in queries[0]
-    assert all(place in queries[0] for place in ("New York", "New Jersey", "Connecticut", "Massachusetts"))
+    assert len(queries) == 3
+    assert "MWBE" in queries[0]
+    assert all(
+        place in query
+        for query in queries
+        for place in ("New York", "New Jersey", "Connecticut", "Massachusetts")
+    )
 
 
-def test_nightlife_results_are_recognized_as_events(monkeypatch):
+def test_business_results_are_recognized_as_events(monkeypatch):
     monkeypatch.setattr(settings, "tavily_api_key", "test-api-key")
 
-    def fake_post(url, **kwargs):
+    def fake_post(self, url, **kwargs):
         return httpx.Response(
             200,
             json={
                 "results": [
                     {
-                        "title": "Friday Hip-Hop Party",
-                        "url": "https://events.example/friday-party",
-                        "content": "Live DJs and dancing.",
+                        "title": "Albany MWBE Procurement Forum",
+                        "url": "https://events.example/mwbe-forum",
+                        "content": "Business networking, supplier diversity and buyer matchmaking.",
                     }
                 ]
             },
             request=httpx.Request("POST", url),
         )
 
-    monkeypatch.setattr(event_discovery.httpx, "post", fake_post)
+    _patch_client_post(monkeypatch, fake_post)
 
-    result = event_discovery.discover_candidates(["NY"], ["Hip_Hop"])
+    result = event_discovery.discover_candidates(["NY"], ["MWBE"])
 
-    assert result["candidates"][0]["matched_group"] == "Hip_Hop"
+    assert result["candidates"][0]["matched_group"] == "MWBE"
     assert result["candidates"][0]["looks_like_event"] is True

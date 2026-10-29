@@ -18,28 +18,20 @@ STATE_NAMES = {
 }
 
 GROUP_TERMS = {
-    "Nightlife": "hip-hop R&B Latin reggaeton Afrobeats nightlife lounges parties concerts DJs",
-    "Hip_Hop": "hip-hop rap nightlife party concert DJ",
-    "R_and_B": "R&B nightlife live music concert party",
-    "Latin": "Latin music nightlife reggaeton salsa bachata party",
-    "Afrobeats": "Afrobeats nightlife party concert DJ",
-    "Live_Music": "live music nightlife concert show",
-    "Lounges": "lounge nightlife events DJ live music",
-    "Concerts": "hip-hop R&B Latin music concert",
-    "Parties": "hip-hop Latin R&B party nightlife DJ",
-    "B2B_Networking": "B2B business networking mixer",
+    "B2B_Networking": "B2B business networking event",
     "Small_Business": "small business owners networking expo",
-    "Startup_Tech": "startup founders technology AI networking meetup",
-    "Chamber_of_Commerce": "chamber of commerce business after hours networking",
-    "WMBE": "WMBE women minority business enterprise",
-    "MWBE": "MWBE minority women-owned business expo procurement",
-    "Muslim_Business": "Muslim business owners networking halal expo",
-    "Supplier_Diversity": "supplier diversity minority supplier development council",
-    "Tech_Contracting": "tech contractors small business technology networking",
+    "Startup_Tech": "startup founders technology AI business networking",
+    "Chamber_of_Commerce": "chamber of commerce business networking breakfast meeting",
+    "WMBE": "WMBE women minority business enterprise networking procurement",
+    "MWBE": "MWBE minority women-owned business expo procurement networking",
+    "Muslim_Business": "Muslim business owners networking expo",
+    "Supplier_Diversity": "supplier diversity minority supplier development council procurement",
+    "Tech_Contracting": "tech contractors small business technology procurement networking",
+    "Procurement_Matchmaking": "MWBE procurement matchmaking buyer meetings contracting opportunities",
 }
 EVENT_WORDS = re.compile(
-    r"event|expo|summit|conference|webinar|networking|fair|forum|mixer|workshop|meetup|"
-    r"nightlife|party|parties|lounge|club|concert|live music|DJ|festival|show",
+    r"event|expo|summit|conference|webinar|networking|fair|forum|workshop|meetup|"
+    r"procurement|matchmaking|contracting|breakfast|luncheon",
     re.I,
 )
 
@@ -81,7 +73,7 @@ def discover_candidates(
     max_results: int = 10,
 ) -> dict:
     states_up = [s.upper() for s in (states or networking.DEFAULT_STATES)]
-    groups = target_groups or ["Nightlife"]
+    groups = target_groups or ["MWBE", "Supplier_Diversity", "B2B_Networking"]
     if not set(states_up) <= set(networking.SUPPORTED_STATES):
         return {"error": f"states must be within {networking.SUPPORTED_STATES}"}
     if not set(groups) <= networking.TARGET_GROUPS:
