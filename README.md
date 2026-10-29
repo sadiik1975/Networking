@@ -12,8 +12,11 @@ Social, party and nightlife listings are not part of this app.
 ## What it does
 
 - **Use the web board** at `/`: connect with the API key (kept only in the
-  browser) to see saved events, run discovery, and ask the board what's
-  coming up.
+  browser) to see saved events and run discovery.
+- **Ask the board** in the chat at `/` (or `POST /ask`): a chat agent that
+  checks the saved board, discovers new events, and saves one only after
+  you confirm. Set `AI_API_KEY` (xAI Grok by default) for full AI answers;
+  without it, Ask answers from the board alone.
 - **Discover business networking events** with Tavily web search. Search
   results are unverified candidates; check the organizer's page before saving.
 - **Track plans** as discovered, interested, registered, attended or skipped.
@@ -39,6 +42,7 @@ Docs: `http://127.0.0.1:8000/docs`. Run the tests with `pytest tests`.
 All routes except `/health` and `/` need `X-API-Key` (`API_KEY`).
 
 - `GET /events`, `GET /events/discover`, `POST /events`, `PATCH /events/{id}`
+- `POST /ask`
 - `POST /reminders/telegram`
 - Legacy integrations: `/contacts`, `/compatibility`, `/companies`, `/match`
 
